@@ -8,44 +8,26 @@ Expression = Number | Variable | Operator
 
 class AutomaticDifferentiation:
     def __init__(self):
-        self.variables = {"name": Node()}
+        self.variables = None
         self.expressionTree = None
         self.evaluated = False
 
     def parse(self, string, variableValues):
         self.expressionTree = ExpressionTree()
+        self.variables = variableValues
         self.expressionTree.build(string, variableValues)
     
     def diffWRT(self, variableName):
         if not self.evaluated:
             self.expressionTree.root.evaluate()
             self.expressionTree.root.feedBackwardWith(1)
-        return self.variables[variableName].sum
+        if variableName in self.variables:
+            return self.variables[variableName].sum
+        return 0
     
 if __name__ == "__main__":
-    AD = AutomaticDifferentiation() # 3x^2 + 2x
-
-    root = AdditionNode()
-    l1 = MultiplicationNode()
-    r1 = MultiplicationNode()
-    root.setLeftChildToBe(l1)
-    root.setRightChildToBe(r1)
-
-    l21 = ConstNode(3)
-    r21 = ExponentNode(2)
-    l1.setLeftChildToBe(l21)
-    l1.setRightChildToBe(r21)
-
-    l22 = ConstNode(2)
-    r1.setLeftChildToBe(l22)
-
-    x = VariableNode("x", 5)
-    AD.variables["x"] = x
-    r21.setChildToBe(x)
-    r1.setRightChildToBe(x)
-
-    et = ExpressionTree()
-    et.root = root
-    AD.expressionTree = et
-    
-    print(AD.diffWRT("x"))
+    AD = AutomaticDifferentiation() # 3x^2 + 2x^4 + 5x + 5
+    equation = "5*x^2*y+5*x^2+7*y^3"
+    AD.parse(equation, {"x": VariableNode("x", 2), "y": VariableNode("y", 3)})
+    result = AD.diffWRT("y")
+    print(result)

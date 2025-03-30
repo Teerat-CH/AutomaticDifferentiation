@@ -81,22 +81,27 @@ class MultiplicationNode(Node):
         self.rightChild = node
 
 class ExponentNode(Node):
-    def __init__(self, exponent: Number):
+    def __init__(self):
         super().__init__("^")
-        self.exponent = exponent
-        self.child: Node = None
-        self.childEvaluatedValue = None
+        self.leftChild: Node = None
+        self.rightChild: Node = None
+        self.leftChildEvaluatedValue = None
+        self.rightChildEvaluatedValue = None
 
     def evaluate(self):
-        if self.child is not None:
-            self.childEvaluatedValue = self.child.evaluate()
-            return self.childEvaluatedValue ** self.exponent
+        if self.leftChild is not None and self.rightChild is not None:
+            self.leftChildEvaluatedValue = self.leftChild.evaluate()
+            self.rightChildEvaluatedValue = self.rightChild.evaluate()
+            return self.leftChildEvaluatedValue ** self.rightChildEvaluatedValue
         
     def feedBackwardWith(self, value: Number):
-        self.child.feedBackwardWith(value * (self.exponent * (self.childEvaluatedValue ** (self.exponent - 1))))
+        self.leftChild.feedBackwardWith(value * (self.rightChildEvaluatedValue * (self.leftChildEvaluatedValue ** (self.rightChildEvaluatedValue - 1))))
 
-    def setChildToBe(self, node: Node):
-        self.child = node
+    def setLeftChildToBe(self, node: Node):
+        self.leftChild = node
+
+    def setRightChildToBe(self, node: Node):
+        self.rightChild = node
 
 if __name__ == "__main__":
     root = AdditionNode()
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     root.setRightChildToBe(r1)
 
     l21 = ConstNode(3)
-    r21 = ExponentNode(2)
+    r21 = ExponentNode()
     l1.setLeftChildToBe(l21)
     l1.setRightChildToBe(r21)
 
@@ -114,7 +119,9 @@ if __name__ == "__main__":
     r1.setLeftChildToBe(l22)
 
     x = VariableNode("x", 5)
-    r21.setChildToBe(x)
+    two = ConstNode(2)
+    r21.setLeftChildToBe(x)
+    r21.setRightChildToBe(two)
     r1.setRightChildToBe(x)
 
     print(root.evaluate())
