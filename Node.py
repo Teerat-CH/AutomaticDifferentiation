@@ -80,6 +80,7 @@ class MultiplicationNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
+# TODO Need to feedBackward on the exponent as well
 class ExponentNode(Node):
     def __init__(self):
         super().__init__("^")
