@@ -1,60 +1,82 @@
 from Node import Node, ConstNode, VariableNode, AdditionNode, MultiplicationNode, ExponentNode
 import re
 
-import networkx as nx
-from matplotlib import pyplot as plt
+def getOperatorIndex(expression, operator):
+    balance = 0
+    splitIndex = -1
+    for i in range(len(expression)):
+        token = expression[i]
+        if token == '(': balance += 1
+        if token == ')': balance -= 1
+        if balance == 0 and token == operator: return i
+    return splitIndex
 
-def parseLeafNode(expression, variables) -> Node:
-    expression = expression[0]
-    if expression.isdigit():
-        return ConstNode(int(expression))
-    elif expression.isalpha():
-        return variables[expression]
-
-def parseExponent(expression, variableValues):
-    if "^" not in expression:
-        return parseLeafNode(expression, variableValues)
-    
-    splitIndex = expression.index("^")
+def splitExpression(expression, splitIndex):
     left = expression[:splitIndex]
     right = expression[splitIndex+1:]
+    return left, right
 
+def findMatchingParenthesis(tokens):
+    balance = 0
+    for i in range(len(tokens)):
+        token = tokens[i]
+        if token == '(':
+            balance += 1
+        elif token == ')':
+            balance -= 1
+            if balance == 0:
+                return i
+        if balance < 0:
+            raise ValueError("Mismatched parentheses")
+    raise ValueError("No matching closing parenthesis")
+
+def parseLeafNode(expression, variables) -> Node:
+    if not expression:
+        raise ValueError("Empty expression in parseLeafNode")
+    first_token = expression[0]
+    if first_token == '(':
+        endIndex = findMatchingParenthesis(expression)
+        if endIndex != len(expression)-1:
+            raise ValueError("Parentheses did not wrap around expression")
+        subExpression = expression[1:endIndex]
+        return parseAddition(subExpression, variables)
+    elif first_token.isdigit(): return ConstNode(int(first_token))
+    elif first_token.isalpha(): return variables[first_token]
+    else:
+        raise ValueError(f"Unexpected token: {first_token}")
+
+def parseExponent(expression, variableValues):
+    
+    splitIndex = getOperatorIndex(expression, "^")
+    if splitIndex == -1: return parseLeafNode(expression, variableValues)
+    left, right = splitExpression(expression, splitIndex)
+    
     currNode = ExponentNode()
     currNode.setLeftChildToBe(parseLeafNode(left, variableValues))
     currNode.setRightChildToBe(parseExponent(right, variableValues))
-
     return currNode
 
 def parseMultiplication(expression, variableValues):
-    if "*" not in expression:
-        return parseExponent(expression, variableValues)
-    
-    splitIndex = expression.index("*")
-    left = expression[:splitIndex]
-    right = expression[splitIndex+1:]
 
+    splitIndex = getOperatorIndex(expression, "*")
+    if splitIndex == -1: return parseExponent(expression, variableValues)
+    left, right = splitExpression(expression, splitIndex)
+    
     currNode = MultiplicationNode()
     currNode.setLeftChildToBe(parseExponent(left, variableValues))
     currNode.setRightChildToBe(parseMultiplication(right, variableValues))
-
     return currNode
 
 def parseAddition(expression, variableValues):
-    if "+" not in expression:
-        return parseMultiplication(expression, variableValues)
-    
-    splitIndex = expression.index("+")
-    left = expression[:splitIndex]
-    right = expression[splitIndex+1:]
 
+    splitIndex = getOperatorIndex(expression, "+")
+    if splitIndex == -1: return parseMultiplication(expression, variableValues)
+    left, right = splitExpression(expression, splitIndex)
+    
     currNode = AdditionNode()
     currNode.setLeftChildToBe(parseMultiplication(left, variableValues))
     currNode.setRightChildToBe(parseAddition(right, variableValues))
-
     return currNode
-    
-def parse(expression, variableValues):
-    return parseAddition(expression, variableValues)
 
 class ExpressionTree:
     def __init__(self):
@@ -62,7 +84,7 @@ class ExpressionTree:
 
     def build(self, expression, variableValues):
         token = re.findall(r'\d+|[a-zA-Z]+|[+*^()]', expression)
-        self.root = parse(token, variableValues)
+        self.root = parseAddition(token, variableValues)
         return self.root
 
 if __name__ == "__main__":
