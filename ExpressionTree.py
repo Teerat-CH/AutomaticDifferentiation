@@ -1,6 +1,9 @@
 from Node import Node, ConstNode, VariableNode, AdditionNode, MultiplicationNode, ExponentNode
 import re
 
+from matplotlib import pyplot as plt
+import networkx as nx
+
 def getOperatorIndex(expression, operator):
     balance = 0
     splitIndex = -1
@@ -91,11 +94,15 @@ if __name__ == "__main__":
     ET = ExpressionTree()
 
     xNode = VariableNode("x", 10)
+    yNode = VariableNode("y", 10)
+    zNode = VariableNode("z", 10)
 
     variableValues = {
-        "x": xNode
+        "x": xNode,
+        "y": yNode,
+        "z": zNode
     }
-    node = ET.build("3*x^2+2*x^4+5*x+5", variableValues)
+    node = ET.build("9+5*x*y+5*x^2*y^4+7*z^9+8*x*y*z", variableValues)
     print(node.evaluate())
     node.feedBackwardWith(1)
     print(variableValues["x"].sum)

@@ -2,6 +2,7 @@ Number = float | int
 Variable = str
 Operator = str
 Expression = Number | Variable | Operator
+import math
 
 class Node:
     def __init__(self, expression: Expression = None):
@@ -80,7 +81,6 @@ class MultiplicationNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
-# TODO Need to feedBackward on the exponent as well
 class ExponentNode(Node):
     def __init__(self):
         super().__init__("^")
@@ -97,6 +97,7 @@ class ExponentNode(Node):
         
     def feedBackwardWith(self, value: Number):
         self.leftChild.feedBackwardWith(value * (self.rightChildEvaluatedValue * (self.leftChildEvaluatedValue ** (self.rightChildEvaluatedValue - 1))))
+        self.rightChild.feedBackwardWith(math.log(self.leftChildEvaluatedValue) * (self.leftChildEvaluatedValue ** self.rightChildEvaluatedValue))
 
     def setLeftChildToBe(self, node: Node):
         self.leftChild = node
