@@ -27,7 +27,7 @@ class AutomaticDifferentiation:
     
 if __name__ == "__main__":
     AD = AutomaticDifferentiation() # 3x^2 + 2x^4 + 5x + 5
-    equation = "5*x^2*y+5*x^2+7*y^3"
-    AD.parse(equation, {"x": VariableNode("x", 2), "y": VariableNode("y", 3)})
-    result = AD.diffWRT("y")
+    equation = "x^(y+z)"
+    AD.parse(equation, {"x": VariableNode("x", 2), "y": VariableNode("y", 3),  "z": VariableNode("z", 3)})
+    result = AD.diffWRT("x")
     print(result)
