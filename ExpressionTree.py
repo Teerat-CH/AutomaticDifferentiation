@@ -1,4 +1,4 @@
-from Node import Node, ConstNode, VariableNode, AdditionNode, MultiplicationNode, ExponentNode
+from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode
 import re
 
 from matplotlib import pyplot as plt
@@ -42,7 +42,7 @@ def parseLeafNode(expression, variables) -> Node:
         if endIndex != len(expression)-1:
             raise ValueError("Parentheses did not wrap around expression")
         subExpression = expression[1:endIndex]
-        return parseAddition(subExpression, variables)
+        return parseAdditionSubtraction(subExpression, variables)
     elif first_token.isdigit(): return ConstNode(int(first_token))
     elif first_token.isalpha(): return variables[first_token]
     else:
@@ -59,26 +59,42 @@ def parseExponent(expression, variableValues):
     currNode.setRightChildToBe(parseExponent(right, variableValues))
     return currNode
 
-def parseMultiplication(expression, variableValues):
+def parseMultiplicationDivision(expression, variableValues):
 
-    splitIndex = getOperatorIndex(expression, "*")
+    splitIndexMultiplication = getOperatorIndex(expression, "*")
+    splitIndexDivision = getOperatorIndex(expression, "/")
+
+    if splitIndexMultiplication == -1 or (splitIndexDivision != -1 and splitIndexDivision < splitIndexMultiplication):
+        splitIndex = splitIndexDivision
+        currNode = DivisionNode()
+    else:
+        splitIndex = splitIndexMultiplication
+        currNode = MultiplicationNode()
+
     if splitIndex == -1: return parseExponent(expression, variableValues)
     left, right = splitExpression(expression, splitIndex)
     
-    currNode = MultiplicationNode()
     currNode.setLeftChildToBe(parseExponent(left, variableValues))
-    currNode.setRightChildToBe(parseMultiplication(right, variableValues))
+    currNode.setRightChildToBe(parseMultiplicationDivision(right, variableValues))
     return currNode
 
-def parseAddition(expression, variableValues):
+def parseAdditionSubtraction(expression, variableValues):
 
-    splitIndex = getOperatorIndex(expression, "+")
-    if splitIndex == -1: return parseMultiplication(expression, variableValues)
+    splitIndexAddition = getOperatorIndex(expression, "+")
+    splitIndexSubtraction = getOperatorIndex(expression, "-")
+
+    if splitIndexAddition == -1 or (splitIndexSubtraction != -1 and splitIndexSubtraction < splitIndexAddition):
+        splitIndex = splitIndexSubtraction
+        currNode = SubtractionNode()
+    else:
+        splitIndex = splitIndexAddition
+        currNode = AdditionNode()
+
+    if splitIndex == -1: return parseMultiplicationDivision(expression, variableValues)
     left, right = splitExpression(expression, splitIndex)
     
-    currNode = AdditionNode()
-    currNode.setLeftChildToBe(parseMultiplication(left, variableValues))
-    currNode.setRightChildToBe(parseAddition(right, variableValues))
+    currNode.setLeftChildToBe(parseMultiplicationDivision(left, variableValues))
+    currNode.setRightChildToBe(parseAdditionSubtraction(right, variableValues))
     return currNode
 
 class ExpressionTree:
@@ -86,23 +102,27 @@ class ExpressionTree:
         self.root = None
 
     def build(self, expression, variableValues):
-        token = re.findall(r'\d+|[a-zA-Z]+|[+*^()]', expression)
-        self.root = parseAddition(token, variableValues)
+
+        # TODO automatically generate variableValue dict
+        
+        # Enclose every negative sign in parentheses. For example, -(x+y) should be (-(x+y)) or -5*x + 3 should be (-5)*x + 3. x-y or 5-3 need not be inside parentheses. 
+        # Multiplication must be explicit. For example, 12x should be written as 12*x.
+        expression = expression.replace('(-', '(0-')
+        token = re.findall(r'\d+|[a-zA-Z]+|[+*\/^()-]', expression)
+        self.root = parseAdditionSubtraction(token, variableValues)
         return self.root
 
 if __name__ == "__main__":
     ET = ExpressionTree()
 
-    xNode = VariableNode("x", 10)
-    yNode = VariableNode("y", 10)
-    zNode = VariableNode("z", 10)
+    xNode = VariableNode("x", 2)
+    yNode = VariableNode("y", 4)
 
     variableValues = {
         "x": xNode,
-        "y": yNode,
-        "z": zNode
+        "y": yNode
     }
-    node = ET.build("9+5*x*y+5*x^2*y^4+7*z^9+8*x*y*z", variableValues)
+    node = ET.build("(5*x^2*y^((-2)*x+y))/(y^2)", variableValues)
     print(node.evaluate())
     node.feedBackwardWith(1)
-    print(variableValues["x"].sum)
+    print(variableValues["y"].sum)

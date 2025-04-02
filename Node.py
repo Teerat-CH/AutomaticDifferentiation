@@ -57,6 +57,30 @@ class AdditionNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
+class SubtractionNode(Node):
+    def __init__(self):
+        super().__init__("-")
+        self.leftChild: Node = None
+        self.rightChild: Node = None
+        self.leftChildEvaluatedValue = None
+        self.rightChildEvaluatedValue = None
+
+    def evaluate(self):
+        if self.leftChild is not None and self.rightChild is not None:
+            self.leftChildEvaluatedValue = self.leftChild.evaluate()
+            self.rightChildEvaluatedValue = self.rightChild.evaluate()
+            return self.leftChildEvaluatedValue - self.rightChildEvaluatedValue
+        
+    def feedBackwardWith(self, value: Number):
+        self.leftChild.feedBackwardWith(value)
+        self.rightChild.feedBackwardWith(-value)
+
+    def setLeftChildToBe(self, node: Node):
+        self.leftChild = node
+
+    def setRightChildToBe(self, node: Node):
+        self.rightChild = node
+
 class MultiplicationNode(Node):
     def __init__(self):
         super().__init__("*")
@@ -81,6 +105,30 @@ class MultiplicationNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
+class DivisionNode(Node):
+    def __init__(self):
+        super().__init__("/")
+        self.leftChild: Node = None
+        self.rightChild: Node = None
+        self.leftChildEvaluatedValue = None
+        self.rightChildEvaluatedValue = None
+
+    def evaluate(self):
+        if self.leftChild is not None and self.rightChild is not None:
+            self.leftChildEvaluatedValue = self.leftChild.evaluate()
+            self.rightChildEvaluatedValue = self.rightChild.evaluate()
+            return self.leftChildEvaluatedValue / self.rightChildEvaluatedValue
+        
+    def feedBackwardWith(self, value: Number):
+        self.leftChild.feedBackwardWith(value * (1 / self.rightChildEvaluatedValue))
+        self.rightChild.feedBackwardWith(value * ((-1 * self.leftChildEvaluatedValue) / (self.rightChildEvaluatedValue ** 2)))
+
+    def setLeftChildToBe(self, node: Node):
+        self.leftChild = node
+
+    def setRightChildToBe(self, node: Node):
+        self.rightChild = node
+
 class ExponentNode(Node):
     def __init__(self):
         super().__init__("^")
@@ -97,7 +145,7 @@ class ExponentNode(Node):
         
     def feedBackwardWith(self, value: Number):
         self.leftChild.feedBackwardWith(value * (self.rightChildEvaluatedValue * (self.leftChildEvaluatedValue ** (self.rightChildEvaluatedValue - 1))))
-        self.rightChild.feedBackwardWith(math.log(self.leftChildEvaluatedValue) * (self.leftChildEvaluatedValue ** self.rightChildEvaluatedValue))
+        self.rightChild.feedBackwardWith(value * (math.log(self.leftChildEvaluatedValue) * (self.leftChildEvaluatedValue ** self.rightChildEvaluatedValue)))
 
     def setLeftChildToBe(self, node: Node):
         self.leftChild = node
@@ -106,25 +154,31 @@ class ExponentNode(Node):
         self.rightChild = node
 
 if __name__ == "__main__":
-    root = AdditionNode()
-    l1 = MultiplicationNode()
-    r1 = MultiplicationNode()
-    root.setLeftChildToBe(l1)
-    root.setRightChildToBe(r1)
+    # root = AdditionNode()
+    # l1 = MultiplicationNode()
+    # r1 = MultiplicationNode()
+    # root.setLeftChildToBe(l1)
+    # root.setRightChildToBe(r1)
 
-    l21 = ConstNode(3)
-    r21 = ExponentNode()
-    l1.setLeftChildToBe(l21)
-    l1.setRightChildToBe(r21)
+    # l21 = ConstNode(3)
+    # r21 = ExponentNode()
+    # l1.setLeftChildToBe(l21)
+    # l1.setRightChildToBe(r21)
 
-    l22 = ConstNode(2)
-    r1.setLeftChildToBe(l22)
+    # l22 = ConstNode(2)
+    # r1.setLeftChildToBe(l22)
 
-    x = VariableNode("x", 5)
-    two = ConstNode(2)
-    r21.setLeftChildToBe(x)
-    r21.setRightChildToBe(two)
-    r1.setRightChildToBe(x)
+    # x = VariableNode("x", 5)
+    # two = ConstNode(2)
+    # r21.setLeftChildToBe(x)
+    # r21.setRightChildToBe(two)
+    # r1.setRightChildToBe(x)
+
+    root = DivisionNode()
+    y = VariableNode("y", 3)
+    x = VariableNode("x", 4)
+    root.setLeftChildToBe(x)
+    root.setRightChildToBe(y)
 
     print(root.evaluate())
     root.feedBackwardWith(1)
