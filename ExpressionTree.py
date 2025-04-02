@@ -1,4 +1,4 @@
-from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode
+from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode, SinNode, CosNode
 import re
 
 from matplotlib import pyplot as plt
@@ -37,6 +37,17 @@ def parseLeafNode(expression, variables) -> Node:
     if not expression:
         raise ValueError("Empty expression in parseLeafNode")
     first_token = expression[0]
+
+    if first_token == 'sin' or first_token == 'cos':
+        if len(expression) < 2 or expression[1] != '(':
+            raise ValueError(f"Expected '(' after {first_token}")
+        endIndex = findMatchingParenthesis(expression[1:])
+        subExpression = expression[2:endIndex+1]
+        childNode = parseAdditionSubtraction(subExpression, variables)
+        currNode = SinNode() if first_token == "sin" else CosNode()
+        currNode.setChildToBe(childNode)
+        return currNode
+
     if first_token == '(':
         endIndex = findMatchingParenthesis(expression)
         if endIndex != len(expression)-1:
@@ -107,6 +118,7 @@ class ExpressionTree:
         
         # Enclose every negative sign in parentheses. For example, -(x+y) should be (-(x+y)) or -5*x + 3 should be (-5)*x + 3. x-y or 5-3 need not be inside parentheses. 
         # Multiplication must be explicit. For example, 12x should be written as 12*x.
+        # sin and cos are in radian
         expression = expression.replace('(-', '(0-')
         token = re.findall(r'\d+|[a-zA-Z]+|[+*\/^()-]', expression)
         self.root = parseAdditionSubtraction(token, variableValues)
@@ -122,7 +134,7 @@ if __name__ == "__main__":
         "x": xNode,
         "y": yNode
     }
-    node = ET.build("(5*x^2*y^((-2)*x+y))/(y^2)", variableValues)
+    node = ET.build("(sin(5*x^2)*y^((-2)*x+y))/(y^2)", variableValues)
     print(node.evaluate())
     node.feedBackwardWith(1)
     print(variableValues["y"].sum)
