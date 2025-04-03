@@ -11,11 +11,12 @@ class AutomaticDifferentiation:
         self.variables = None
         self.expressionTree = None
         self.evaluated = False
+        self.tree = None
 
     def parse(self, string, variableValues):
         self.expressionTree = ExpressionTree()
         self.variables = variableValues
-        self.expressionTree.build(string, variableValues)
+        self.tree, self.variables = self.expressionTree.build(string, variableValues)
     
     def diffWRT(self, variableName):
         if not self.evaluated:
@@ -26,8 +27,8 @@ class AutomaticDifferentiation:
         return 0
     
 if __name__ == "__main__":
-    AD = AutomaticDifferentiation() # 3x^2 + 2x^4 + 5x + 5
-    equation = "x^(y+z)"
-    AD.parse(equation, {"x": VariableNode("x", 2), "y": VariableNode("y", 3),  "z": VariableNode("z", 3)})
+    AD = AutomaticDifferentiation()
+    equation = "sin(x^2/y)/cos(x+y*z) + y^x"
+    AD.parse(equation, {"x": 2, "y": 4,  "z": 3})
     result = AD.diffWRT("x")
     print(result)
