@@ -153,6 +153,40 @@ class ExponentNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
+class SinNode(Node):
+    def __init__(self):
+        super().__init__("sin")
+        self.child: Node = None
+        self.childEvaluatedValue = None
+
+    def evaluate(self):
+        if self.child is not None :
+            self.childEvaluatedValue = self.child.evaluate()
+            return math.sin(self.childEvaluatedValue)
+        
+    def feedBackwardWith(self, value: Number):
+        self.child.feedBackwardWith(value * math.cos(self.childEvaluatedValue))
+
+    def setChildToBe(self, node: Node):
+        self.child = node
+
+class CosNode(Node):
+    def __init__(self):
+        super().__init__("cos")
+        self.child: Node = None
+        self.childEvaluatedValue = None
+
+    def evaluate(self):
+        if self.child is not None :
+            self.childEvaluatedValue = self.child.evaluate()
+            return math.cos(self.childEvaluatedValue)
+        
+    def feedBackwardWith(self, value: Number):
+        self.child.feedBackwardWith(-value * math.sin(self.childEvaluatedValue))
+
+    def setChildToBe(self, node: Node):
+        self.child = node
+
 if __name__ == "__main__":
     # root = AdditionNode()
     # l1 = MultiplicationNode()

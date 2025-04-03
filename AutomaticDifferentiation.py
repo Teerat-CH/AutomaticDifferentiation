@@ -28,7 +28,7 @@ class AutomaticDifferentiation:
     
 if __name__ == "__main__":
     AD = AutomaticDifferentiation()
-    equation = "(x^3/y^2)^4*(z/(y^2))"
+    equation = "sin(x^2/y)/cos(x+y*z) + y^x"
     AD.parse(equation, {"x": 2, "y": 4,  "z": 3})
-    result = AD.diffWRT("y")
+    result = AD.diffWRT("x")
     print(result)
