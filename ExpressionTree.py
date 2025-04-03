@@ -1,5 +1,6 @@
 from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode
 import re
+import math
 
 from matplotlib import pyplot as plt
 import networkx as nx
@@ -100,29 +101,35 @@ def parseAdditionSubtraction(expression, variableValues):
 class ExpressionTree:
     def __init__(self):
         self.root = None
+        self.variables = {
+            "e": math.e,
+            "pi": math.pi
+        }
 
     def build(self, expression, variableValues):
 
         # TODO automatically generate variableValue dict
+        for variableName, value in variableValues.items():
+            newVarNode = VariableNode(variableName, value)
+            self.variables[variableName] = newVarNode
         
         # Enclose every negative sign in parentheses. For example, -(x+y) should be (-(x+y)) or -5*x + 3 should be (-5)*x + 3. x-y or 5-3 need not be inside parentheses. 
         # Multiplication must be explicit. For example, 12x should be written as 12*x.
         expression = expression.replace('(-', '(0-')
         token = re.findall(r'\d+|[a-zA-Z]+|[+*\/^()-]', expression)
-        self.root = parseAdditionSubtraction(token, variableValues)
-        return self.root
+        self.root = parseAdditionSubtraction(token, self.variables)
+        return self.root, self.variables
+    
+    
 
 if __name__ == "__main__":
     ET = ExpressionTree()
 
-    xNode = VariableNode("x", 2)
-    yNode = VariableNode("y", 4)
-
     variableValues = {
-        "x": xNode,
-        "y": yNode
+        "x": 2,
+        "y": 4
     }
+
     node = ET.build("(5*x^2*y^((-2)*x+y))/(y^2)", variableValues)
     print(node.evaluate())
     node.feedBackwardWith(1)
-    print(variableValues["y"].sum)
