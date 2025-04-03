@@ -153,6 +153,32 @@ class ExponentNode(Node):
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
 
+class LogNode(Node):
+    def __init__(self):
+        super().__init__("log")
+        self.leftChild: Node = None
+        self.rightChild: Node = None
+        self.leftChildEvaluatedValue = None
+        self.rightChildEvaluatedValue = None
+
+    def evaluate(self):
+        if self.leftChild is not None and self.rightChild is not None:
+            self.leftChildEvaluatedValue = self.leftChild.evaluate()
+            self.rightChildEvaluatedValue = self.rightChild.evaluate()
+            if self.leftChildEvaluatedValue <= 0:
+                raise ValueError("base of log has to be larger than zero")
+            return math.log(self.rightChildEvaluatedValue, self.leftChildEvaluatedValue)
+        
+    def feedBackwardWith(self, value: Number):
+        self.leftChild.feedBackwardWith(value * ((-1 * math.log(self.rightChildEvaluatedValue))/(self.leftChildEvaluatedValue * (math.log(self.leftChildEvaluatedValue)**2))))
+        self.rightChild.feedBackwardWith(value * (1/(self.rightChildEvaluatedValue * math.log(self.leftChildEvaluatedValue))))
+
+    def setLeftChildToBe(self, node: Node):
+        self.leftChild = node
+
+    def setRightChildToBe(self, node: Node):
+        self.rightChild = node
+
 if __name__ == "__main__":
     # root = AdditionNode()
     # l1 = MultiplicationNode()
