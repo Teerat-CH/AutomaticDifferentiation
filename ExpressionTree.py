@@ -1,4 +1,4 @@
-from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode, SinNode, CosNode
+from Node import Node, ConstNode, VariableNode, AdditionNode, SubtractionNode, MultiplicationNode, DivisionNode, ExponentNode, SinNode, CosNode, LogNode
 import re
 import math
 
@@ -49,6 +49,45 @@ def parseLeafNode(expression, variables) -> Node:
         currNode.setChildToBe(childNode)
         return currNode
 
+    # Deal with log(base)(argument)
+    if first_token == 'log':
+        if len(expression) < 2 or expression[1] != '(':
+            raise ValueError("Expected '(' after 'log'")
+        
+        # Parse the base
+        endBaseParentheses = findMatchingParenthesis(expression[1:])
+        logBaseSubExpression = expression[2:endBaseParentheses + 1]
+        logBaseNode = parseAdditionSubtraction(logBaseSubExpression, variables)
+        
+        # Parse the argument
+        logArgumentExpression = expression[endBaseParentheses + 2:]
+        if len(logArgumentExpression) == 0 or logArgumentExpression[0] != '(':
+            raise ValueError("Expected '(' for log argument")
+        
+        endArgumentParentheses = findMatchingParenthesis(logArgumentExpression)
+        logArgumentSubExpression = logArgumentExpression[1:endArgumentParentheses]
+        logArgumentNode = parseAdditionSubtraction(logArgumentSubExpression, variables)
+
+        # Create the LogNode
+        currNode = LogNode()
+        currNode.setLeftChildToBe(logBaseNode)
+        currNode.setRightChildToBe(logArgumentNode)
+
+        return currNode
+
+    # Deal with ln()
+    if first_token == 'ln':
+        if len(expression) < 2 or expression[1] != '(':
+            raise ValueError(f"Expected '(' after {first_token}")
+        endIndex = findMatchingParenthesis(expression[1:])
+        subExpression = expression[2:endIndex+1]
+        childNode = parseAdditionSubtraction(subExpression, variables)
+        currNode = LogNode()
+        currNode.setLeftChildToBe(VariableNode("e", math.e))
+        currNode.setRightChildToBe(childNode)
+        return currNode
+
+    # Deal with Parentheses
     if first_token == '(':
         endIndex = findMatchingParenthesis(expression)
         if endIndex != len(expression)-1:
@@ -137,10 +176,6 @@ class ExpressionTree:
 if __name__ == "__main__":
     ET = ExpressionTree()
 
-    variableValues = {
-        "x": 2,
-        "y": 4
-    }
-    node = ET.build("(sin(5*x^2)*y^((-2)*x+y))/(y^2)", variableValues)
-    print(node.evaluate())
-    node.feedBackwardWith(1)
+    variableValues = {}
+    root, variables = ET.build("log(2)(8)", variableValues)  # Unpack the tuple
+    print(root.evaluate())  # Call evaluate() on the root node

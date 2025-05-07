@@ -200,18 +200,24 @@ class LogNode(Node):
             self.leftChildEvaluatedValue = self.leftChild.evaluate()
             self.rightChildEvaluatedValue = self.rightChild.evaluate()
             if self.leftChildEvaluatedValue <= 0:
-                raise ValueError("base of log has to be larger than zero")
+                raise ValueError("Base of log must be greater than zero")
+            if self.rightChildEvaluatedValue <= 0:
+                raise ValueError("Argument of log must be greater than zero")
             return math.log(self.rightChildEvaluatedValue, self.leftChildEvaluatedValue)
         
     def feedBackwardWith(self, value: Number):
-        self.leftChild.feedBackwardWith(value * ((-1 * math.log(self.rightChildEvaluatedValue))/(self.leftChildEvaluatedValue * (math.log(self.leftChildEvaluatedValue)**2))))
-        self.rightChild.feedBackwardWith(value * (1/(self.rightChildEvaluatedValue * math.log(self.leftChildEvaluatedValue))))
+        if self.leftChildEvaluatedValue <= 0 or self.rightChildEvaluatedValue <= 0:
+            raise ValueError("Invalid values for log differentiation")
+        self.leftChild.feedBackwardWith(value * ((-1 * math.log(self.rightChildEvaluatedValue)) /
+                                                 (self.leftChildEvaluatedValue * (math.log(self.leftChildEvaluatedValue) ** 2))))
+        self.rightChild.feedBackwardWith(value * (1 / (self.rightChildEvaluatedValue * math.log(self.leftChildEvaluatedValue))))
 
     def setLeftChildToBe(self, node: Node):
         self.leftChild = node
 
     def setRightChildToBe(self, node: Node):
         self.rightChild = node
+        
 if __name__ == "__main__":
     # root = AdditionNode()
     # l1 = MultiplicationNode()

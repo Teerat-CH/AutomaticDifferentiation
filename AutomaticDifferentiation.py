@@ -28,7 +28,8 @@ class AutomaticDifferentiation:
     
 if __name__ == "__main__":
     AD = AutomaticDifferentiation()
-    equation = "sin(x^2/y)/cos(x+y*z) + y^x"
-    AD.parse(equation, {"x": 2, "y": 4,  "z": 3})
-    result = AD.diffWRT("x")
+    # equation = "sin(x^2/y)/cos(x+y*z) + y^x"
+    equation = "log(e)(x*y)"
+    AD.parse(equation, {"e": 13, "x": 2, "y": 4,  "z": 3})
+    result = AD.diffWRT("y")
     print(result)
